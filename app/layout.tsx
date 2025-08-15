@@ -5,7 +5,8 @@ import "./globals.css";
 import { ThemeSwitcher } from "@/components/theme-switcher" // ajusta la ruta
 import ConveyThisLoader from "./ConveyThisLoader"; // import relativo y simple
 
-
+void ThemeSwitcher;
+void ConveyThisLoader;
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -30,9 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        
-      </head>
+      
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"

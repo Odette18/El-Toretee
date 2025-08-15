@@ -2,6 +2,9 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 
+void ThemeSwitcher;
+void hasEnvVars;
+void Link;
 export default function ProtectedLayout({
   children,
 }: {

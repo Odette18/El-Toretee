@@ -9,7 +9,7 @@ export default async function UbicacionesPage() {
 
   // Obtener ubicaciones activas
   const { data: ubicaciones } = await supabase.from("locations").select("*").eq("is_active", true).order("created_at")
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getHours = (location: any) => {
     const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]

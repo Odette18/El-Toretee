@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+//import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function MenuPage() {

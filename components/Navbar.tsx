@@ -6,13 +6,14 @@ import { Menu, X, Beef, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 
+void Beef;
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
   
   const supabase = createClient()
-
+// eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Verificar sesión inicial
     const checkSession = async () => {
@@ -45,7 +46,7 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/images/Logo_Torete.png" className="h-16 w-16 " />
+              <img src="/images/Logo_Torete.png" alt="" className="h-16 w-16 " />
               <span className="text-xl font-bold text-[#1F2937]">El Torete Burger</span>
             </Link>
           </div>

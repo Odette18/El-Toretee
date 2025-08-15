@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 
 // Marcamos importaciones como usadas para evitar eslint no-unused-vars
 // sin cambiar el diseño ni la lógica
-void [Navbar, Footer, Star, Users, Clock]
+void [Navbar, Footer, Star, Users, Clock];  
 
 export default async function LandingPage() {
   const supabase = await createClient()

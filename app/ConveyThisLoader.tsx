@@ -11,7 +11,8 @@ export default function ConveyThisLoader() {
     s.src = "https://cdn.conveythis.com/javascript/conveythis.js";
     s.async = true;
     s.onload = () => {
-      // @ts-ignore
+        //@ts-expect-error: ConveyThis no provee tipos para esta llamada concreta
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const init = (window as any).ConveyThis_Initializer;
       if (init && typeof init.init === "function") {
         init.init({

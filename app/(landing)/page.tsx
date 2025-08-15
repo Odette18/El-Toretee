@@ -4,25 +4,59 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Star, Users, Clock, Beef } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server" // Server component
 
 // Marcamos importaciones como usadas para evitar eslint no-unused-vars
 // sin cambiar el diseño ni la lógica
-void [Navbar, Footer, Star, Users, Clock];  
+void [Navbar, Footer, Star, Users, Clock];
+
+function shufflePick<T>(arr: T[], take: number): T[] {
+  // Fisher–Yates in-place
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a.slice(0, take)
+}
 
 export default async function LandingPage() {
   const supabase = await createClient()
 
-  const [{ data: featuredItems }, { data: testimonials }, { data: teamMembers }, { data: siteSettings }] =
-    await Promise.all([
-      supabase.from("menu_items").select("*").eq("is_featured", true).order("display_order"),
-      supabase.from("testimonials").select("*").eq("is_featured", true).order("created_at", { ascending: false }),
-      supabase.from("team_members").select("*").eq("is_active", true).order("display_order"),
-      supabase.from("site_settings").select("*"),
-    ])
+  // Traemos todo lo necesario en paralelo
+  const [
+    { data: allMenuItems },
+    { data: testimonials },
+    { data: teamMembers },
+    { data: siteSettings },
+  ] = await Promise.all([
+    supabase
+      .from("menu_items")
+      .select("*")
+      .eq("is_available", true)
+      .order("display_order"),
+    supabase
+      .from("testimonials")
+      .select("*")
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("team_members")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order"),
+    supabase.from("site_settings").select("*"),
+  ])
 
-  // Evitamos warning de variable no usada si testimonials no se muestra
+  // Evitamos warning si no se usan
   void testimonials
+
+  // Elegimos 3 items aleatorios del menú (opcionalmente, prioriza los que tienen imagen)
+  const pool =
+    allMenuItems?.filter((i) => i.image_url && i.image_url.trim() !== "") ??
+    allMenuItems ??
+    []
+  const featuredItems = shufflePick(pool.length ? pool : allMenuItems ?? [], 3)
 
   const settings =
     siteSettings?.reduce(
@@ -35,7 +69,6 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen">
-
       {/* Hero Section */}
       <section
         className="relative text-white py-20 min-h-[600px] flex items-center"
@@ -60,10 +93,11 @@ export default async function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-lime-300 text-black hover:bg-secondary/90 font-bold">
-              <Link href="/landing/menu">Ver Menú</Link>
+              <Link href="/menu">Ver Menú</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-lime-300 text-black hover:bg-secondary/90 font-bold">
-              <Link href="/landing/ubicaciones">Nuestras Ubicaciones</Link>
+
+            <Button asChild size="lg" className="bg-lime-300 text-black hover:bg-secondary/90 font-bold">
+              <Link href="/ubicaciones">Nuestras Ubicaciones</Link>
             </Button>
           </div>
         </div>
@@ -79,29 +113,34 @@ export default async function LandingPage() {
               clientes
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3  gap-12">
-            {featuredItems?.map((item) => (
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {featuredItems?.map((item: any) => (
               <Card
                 key={item.id}
                 className="overflow-hidden hover:shadow-lg transition-shadow border-2 border-secondary/20 "
               >
-                <div className="aspect-video bg-gray-200">
+                <div className="w-full aspect-[4/3] bg-white overflow-hidden">
                   <img
                     src={item.image_url || "/images/hamburguesa-torete.png"}
                     alt={item.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <CardContent className="p-4 text-primary-foreground">
                   <h3 className="text-xl font-bold text-[#1F2937] mb-2">{item.name}</h3>
-                  <p className="text-gray-600 mb-4">{item.description}</p>
+                  <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-primary">${item.price}</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {typeof item.price === "number" ? `$${item.price}` : item.price}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
           <div className="text-center mt-12">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
               <Link href="/menu">Ver Menú Completo</Link>
@@ -124,13 +163,14 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {teamMembers?.map((member) => (
+            {teamMembers?.map((member: any) => (
               <div key={member.id} className="text-center">
                 <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-secondary/20 border-4 border-secondary">
                   <img
                     src={member.image_url || "/placeholder.svg?height=150&width=150"}
                     alt={member.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <h3 className="font-bold text-lg mb-1">{member.name}</h3>
@@ -143,7 +183,7 @@ export default async function LandingPage() {
             <div className="bg-secondary/10 rounded-lg p-8 max-w-2xl mx-auto">
               <h3 className="text-2xl font-bold mb-4">Nuestra Misión</h3>
               <p className="text-lg">
-                &quot;Crear momentos únicos a través de hamburguesas excepcionales, brindando siempre la mejor calidad y un
+                &quot;Crear momentos a través de hamburguesas excepcionales, brindando siempre la mejor calidad y un
                 servicio que supere las expectativas de nuestros clientes.&quot;
               </p>
             </div>
@@ -151,8 +191,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      {/* Comentado para evitar errores si la tabla no existe */}
+      
     </div>
   )
 }

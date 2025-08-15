@@ -45,7 +45,7 @@ export default async function UbicacionesPage() {
       {/* Ubicaciones Grid */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {ubicaciones?.map((ubicacion) => (
               <Card
                 key={ubicacion.id}
@@ -105,19 +105,19 @@ export default async function UbicacionesPage() {
                   )}
 
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <Button className="flex-1 bg-primary hover:bg-primary/90">
+                    {/* <Button className="flex-1 bg-primary hover:bg-primary/90">
                       <MapPin className="h-4 w-4 mr-2" />
                       Ver en Mapa
-                    </Button>
-                    {ubicacion.phone && (
-                      <Button
-                        variant="outline"
-                        className="flex-1 border-primary text-primary hover:bg-primary hover:text-white bg-transparent"
-                      >
-                        <Phone className="h-4 w-4 mr-2" />
-                        Llamar
-                      </Button>
-                    )}
+                    </Button> */}
+                    {/* {ubicacion.phone && (
+                      // <Button
+                      //   variant="outline"
+                      //   className="flex-1 border-primary text-primary hover:bg-primary hover:text-white bg-transparent"
+                      // >
+                      //   <Phone className="h-4 w-4 mr-2" />
+                      //   Llamar
+                      // </Button>
+                    )} */}
                   </div>
                 </CardContent>
               </Card>
@@ -138,16 +138,22 @@ export default async function UbicacionesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="text-left">
                 <h3 className="font-semibold text-[#1F2937] mb-2">Horarios de Delivery:</h3>
-                <p className="text-gray-600">Lunes a Domingo: 12:00 PM - 10:00 PM</p>
+                <p className="text-gray-600">Jueves a Sabado: 12:00 PM - 10:00 PM</p>
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-[#1F2937] mb-2">Tiempo de entrega:</h3>
                 <p className="text-gray-600">30-45 minutos aproximadamente</p>
               </div>
+              
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1F2937] mb-2">Telefono:</h3>
+                <p className="text-gray-600">+52 (618) 242-51-26</p>
+              </div>
+
             </div>
-            <Button size="lg" className="bg-primary hover:bg-primary/90">
+            {/* <Button size="lg" className="bg-primary hover:bg-primary/90">
               Ordenar Ahora
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>

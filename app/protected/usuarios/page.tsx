@@ -15,6 +15,9 @@ import { Plus, Edit, Trash2, ArrowLeft, User, Shield, Loader2 } from "lucide-rea
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
+void Plus;
+
+
 type UserProfile = {
   id: string
   full_name: string

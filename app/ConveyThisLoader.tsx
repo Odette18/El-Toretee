@@ -10,22 +10,28 @@ export default function ConveyThisLoader() {
     s.id = "conveythis-js";
     s.src = "https://cdn.conveythis.com/javascript/conveythis.js";
     s.async = true;
-    s.onload = () => {
-        //@ts-expect-error: ConveyThis no provee tipos para esta llamada concreta
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const init = (window as any).ConveyThis_Initializer;
+
+       s.onload = () => {
+      // Tipado seguro sin @ts-expect-error
+      type ConveyThisInit = {
+        init?: (config?: Record<string, unknown>) => void;
+      };
+      const init = (window as unknown as { ConveyThis_Initializer?: ConveyThisInit }).ConveyThis_Initializer;
+
       if (init && typeof init.init === "function") {
         init.init({
           api_key: process.env.NEXT_PUBLIC_CONVEYTHIS_API_KEY,
           // puedes forzar posición si quieres:
           // position: "bottom_right", // "bottom_left" | "bottom_right"
-          remember_language: true
+          remember_language: true,
         });
         console.log("[ConveyThis] inicializado");
       } else {
         console.warn("[ConveyThis] script cargó, pero no hay Initializer");
       }
     };
+
+
     s.onerror = () => console.warn("[ConveyThis] no se pudo cargar el script");
     document.body.appendChild(s);
   }, []);

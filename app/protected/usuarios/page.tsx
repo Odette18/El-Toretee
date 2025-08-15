@@ -180,10 +180,10 @@ export default function AdminUsuariosPage() {
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
+                {/* <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Usuario
-                </Button>
+                </Button> */}
               </DialogTrigger>
 
               {/* responsive: ancho máximo del diálogo en sm */}
@@ -206,7 +206,7 @@ export default function AdminUsuariosPage() {
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      {/* <Label htmlFor="email">Email</Label> */}
                       <Input
                         id="email"
                         type="email"
@@ -218,7 +218,7 @@ export default function AdminUsuariosPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="role">Rol</Label>
+                       <Label htmlFor="role">Rol</Label> 
                       <Select
                         value={formData.role}
                         onValueChange={(v) =>
@@ -241,7 +241,7 @@ export default function AdminUsuariosPage() {
 
                   {!editingItem && (
                     <div className="space-y-2">
-                      <Label htmlFor="password">Contraseña</Label>
+                      {/* <Label htmlFor="password">Contraseña</Label> */}
                       <Input
                         id="password"
                         type="password"

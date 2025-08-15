@@ -115,6 +115,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
             {featuredItems?.map((item: any) => (
               <Card
                 key={item.id}
@@ -163,6 +164,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
             {teamMembers?.map((member: any) => (
               <div key={member.id} className="text-center">
                 <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-secondary/20 border-4 border-secondary">

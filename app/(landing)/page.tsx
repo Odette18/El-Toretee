@@ -20,6 +20,22 @@ function shufflePick<T>(arr: T[], take: number): T[] {
   return a.slice(0, take)
 }
 
+// Tipos mínimos (solo los campos que ya usas en el JSX)
+type MenuItemLite = {
+  id: string | number
+  image_url?: string | null
+  name: string
+  description?: string | null
+  price: number | string
+}
+
+type TeamMemberLite = {
+  id: string | number
+  image_url?: string | null
+  name: string
+  role?: string | null
+}
+
 export default async function LandingPage() {
   const supabase = await createClient()
 
@@ -53,9 +69,7 @@ export default async function LandingPage() {
 
   // Elegimos 3 items aleatorios del menú (opcionalmente, prioriza los que tienen imagen)
   const pool =
-    allMenuItems?.filter((i) => i.image_url && i.image_url.trim() !== "") ??
-    allMenuItems ??
-    []
+    allMenuItems?.filter((i) => i.image_url && i.image_url.trim() !== "") ?? allMenuItems ?? []
   const featuredItems = shufflePick(pool.length ? pool : allMenuItems ?? [], 3)
 
   const settings =
@@ -115,8 +129,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {featuredItems?.map((item: any) => (
+            {featuredItems?.map((item: MenuItemLite) => (
               <Card
                 key={item.id}
                 className="overflow-hidden hover:shadow-lg transition-shadow border-2 border-secondary/20 "
@@ -164,8 +177,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {teamMembers?.map((member: any) => (
+            {teamMembers?.map((member: TeamMemberLite) => (
               <div key={member.id} className="text-center">
                 <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-secondary/20 border-4 border-secondary">
                   <img
@@ -192,8 +204,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      
     </div>
   )
 }

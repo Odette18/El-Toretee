@@ -19,17 +19,17 @@ type Location = {
   id: string
   name: string
   address: string
-  phone?: string
-  features?: string[]
+  phone: string | null
+  features: string[] | null
   is_active: boolean
-  image_url?: string
-  hours_monday?: string
-  hours_tuesday?: string
-  hours_wednesday?: string
-  hours_thursday?: string
-  hours_friday?: string
-  hours_saturday?: string
-  hours_sunday?: string
+  image_url: string | null
+  hours_monday: string | null
+  hours_tuesday: string | null
+  hours_wednesday: string | null
+  hours_thursday: string | null
+  hours_friday: string | null
+  hours_saturday: string | null
+  hours_sunday: string | null
 }
 
 export default function AdminUbicacionesPage() {
@@ -57,6 +57,7 @@ export default function AdminUbicacionesPage() {
 
   useEffect(() => {
     fetchLocations()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchLocations = async () => {
@@ -67,12 +68,21 @@ export default function AdminUbicacionesPage() {
         .order("created_at", { ascending: false })
 
       if (error) throw error
-      if (data) setUbicaciones(data)
+      setUbicaciones((data ?? []) as Location[])
     } catch (error) {
       console.error("Error fetching locations:", error)
+      alert("No se pudieron cargar las ubicaciones.")
     } finally {
       setLoading(false)
     }
+  }
+
+  const parseFeatures = (raw: string): string[] | null => {
+    const arr = raw
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+    return arr.length ? arr : null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,44 +90,65 @@ export default function AdminUbicacionesPage() {
     setSubmitting(true)
 
     try {
+      // Validación mínima
+      if (!formData.name.trim()) throw new Error("El nombre de la sucursal es obligatorio.")
+      if (!formData.address.trim()) throw new Error("La dirección es obligatoria.")
+      if (!formData.phone.trim()) throw new Error("El teléfono es obligatorio.")
+
+      // Normalización: "" -> null
       const locationData = {
-        name: formData.name,
-        address: formData.address,
-        phone: formData.phone || undefined,
-        features: formData.features ? formData.features.split(",").map((f) => f.trim()) : [],
-        image_url: formData.image_url || undefined,
-        hours_monday: formData.hours_monday || undefined,
-        hours_tuesday: formData.hours_tuesday || undefined,
-        hours_wednesday: formData.hours_wednesday || undefined,
-        hours_thursday: formData.hours_thursday || undefined,
-        hours_friday: formData.hours_friday || undefined,
-        hours_saturday: formData.hours_saturday || undefined,
-        hours_sunday: formData.hours_sunday || undefined,
+        name: formData.name.trim(),
+        address: formData.address.trim(),
+        phone: formData.phone.trim() || null,
+        features: parseFeatures(formData.features),        // array o null
+        image_url: formData.image_url.trim() || null,
+        hours_monday: formData.hours_monday.trim() || null,
+        hours_tuesday: formData.hours_tuesday.trim() || null,
+        hours_wednesday: formData.hours_wednesday.trim() || null,
+        hours_thursday: formData.hours_thursday.trim() || null,
+        hours_friday: formData.hours_friday.trim() || null,
+        hours_saturday: formData.hours_saturday.trim() || null,
+        hours_sunday: formData.hours_sunday.trim() || null,
       }
 
+      let resp
       if (editingItem) {
-        const { data, error } = await supabase
+        resp = await supabase
           .from("locations")
           .update(locationData)
           .eq("id", editingItem.id)
           .select()
           .single()
-
-        if (error) throw error
-        setUbicaciones(ubicaciones.map((item) => (item.id === editingItem.id ? data : item)))
       } else {
-        const { data, error } = await supabase
+        resp = await supabase
           .from("locations")
           .insert([{ ...locationData, is_active: true }])
           .select()
           .single()
-
-        if (error) throw error
-        setUbicaciones([data, ...ubicaciones])
       }
+
+      const { data, error } = resp as { data: Location | null; error: any }
+      if (error) {
+        console.error("Supabase error:", {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        })
+        throw new Error(error.message || "No se pudo guardar la ubicación.")
+      }
+      if (!data) throw new Error("La base de datos no devolvió la ubicación guardada.")
+
+      if (editingItem) {
+        setUbicaciones(prev => prev.map(item => (item.id === editingItem.id ? data : item)))
+      } else {
+        setUbicaciones(prev => [data, ...prev])
+      }
+
       resetForm()
-    } catch (error) {
-      console.error("Error submitting form:", error)
+    } catch (err: any) {
+      alert(err?.message || "Ocurrió un error guardando la ubicación.")
+      console.error(err)
     } finally {
       setSubmitting(false)
     }
@@ -145,18 +176,18 @@ export default function AdminUbicacionesPage() {
   const handleEdit = (item: Location) => {
     setEditingItem(item)
     setFormData({
-      name: item.name,
-      address: item.address,
-      phone: item.phone || "",
-      features: item.features?.join(", ") || "",
-      image_url: item.image_url || "",
-      hours_monday: item.hours_monday || "",
-      hours_tuesday: item.hours_tuesday || "",
-      hours_wednesday: item.hours_wednesday || "",
-      hours_thursday: item.hours_thursday || "",
-      hours_friday: item.hours_friday || "",
-      hours_saturday: item.hours_saturday || "",
-      hours_sunday: item.hours_sunday || "",
+      name: item.name ?? "",
+      address: item.address ?? "",
+      phone: item.phone ?? "",
+      features: item.features?.join(", ") ?? "",
+      image_url: item.image_url ?? "",
+      hours_monday: item.hours_monday ?? "",
+      hours_tuesday: item.hours_tuesday ?? "",
+      hours_wednesday: item.hours_wednesday ?? "",
+      hours_thursday: item.hours_thursday ?? "",
+      hours_friday: item.hours_friday ?? "",
+      hours_saturday: item.hours_saturday ?? "",
+      hours_sunday: item.hours_sunday ?? "",
     })
     setIsDialogOpen(true)
   }
@@ -165,28 +196,30 @@ export default function AdminUbicacionesPage() {
     try {
       const { error } = await supabase.from("locations").delete().eq("id", id)
       if (error) throw error
-      setUbicaciones(ubicaciones.filter((item) => item.id !== id))
-    } catch (error) {
+      setUbicaciones(prev => prev.filter(item => item.id !== id))
+    } catch (error: any) {
       console.error("Error deleting location:", error)
+      alert(error?.message || "No se pudo eliminar la ubicación.")
     }
   }
 
   const toggleStatus = async (id: string) => {
     try {
-      const location = ubicaciones.find((l) => l.id === id)
-      if (!location) return
+      const found = ubicaciones.find(l => l.id === id)
+      if (!found) return
 
       const { data, error } = await supabase
         .from("locations")
-        .update({ is_active: !location.is_active })
+        .update({ is_active: !found.is_active })
         .eq("id", id)
         .select()
         .single()
 
       if (error) throw error
-      setUbicaciones(ubicaciones.map((item) => (item.id === id ? data : item)))
-    } catch (error) {
+      setUbicaciones(prev => prev.map(item => (item.id === id ? (data as Location) : item)))
+    } catch (error: any) {
       console.error("Error toggling status:", error)
+      alert(error?.message || "No se pudo cambiar el estado.")
     }
   }
 
@@ -195,62 +228,51 @@ export default function AdminUbicacionesPage() {
     const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
     const schedules = days.map((day, index) => {
-      const hours = location[`hours_${day}` as keyof Location] as string
+      const key = `hours_${day}` as keyof Location
+      const hours = location[key] as string | null
       return { day: dayNames[index], hours: hours || null }
     })
 
-    const groupedSchedules: Array<{ days: string; hours: string }> = []
-    let currentGroup: { days: string[]; hours: string | null } = { days: [], hours: null }
+    const grouped: Array<{ days: string; hours: string }> = []
+    let current: { days: string[]; hours: string | null } = { days: [], hours: null }
 
-    schedules.forEach((schedule) => {
-      if (schedule.hours && schedule.hours === currentGroup.hours) {
-        currentGroup.days.push(schedule.day)
+    schedules.forEach(schedule => {
+      if (schedule.hours && schedule.hours === current.hours) {
+        current.days.push(schedule.day)
       } else if (schedule.hours) {
-        if (currentGroup.days.length > 0 && currentGroup.hours) {
-          const daysRange =
-            currentGroup.days.length > 2 &&
-            currentGroup.days[0] === "Lun" &&
-            currentGroup.days[currentGroup.days.length - 1] === "Sáb"
+        if (current.days.length > 0 && current.hours) {
+          const range =
+            current.days.length > 2 &&
+            current.days[0] === "Lun" &&
+            current.days[current.days.length - 1] === "Sáb"
               ? "Lun–Sáb"
-              : currentGroup.days.length > 1
-              ? `${currentGroup.days[0]}–${currentGroup.days[currentGroup.days.length - 1]}`
-              : currentGroup.days.join(", ")
-
-          groupedSchedules.push({
-            days: daysRange,
-            hours: currentGroup.hours,
-          })
+              : current.days.length > 1
+              ? `${current.days[0]}–${current.days[current.days.length - 1]}`
+              : current.days.join(", ")
+          grouped.push({ days: range, hours: current.hours })
         }
-        currentGroup = { days: [schedule.day], hours: schedule.hours }
+        current = { days: [schedule.day], hours: schedule.hours }
       }
     })
 
-    if (currentGroup.days.length > 0 && currentGroup.hours) {
-      const daysRange =
-        currentGroup.days.length > 2 &&
-        currentGroup.days[0] === "Lun" &&
-        currentGroup.days[currentGroup.days.length - 1] === "Sáb"
+    if (current.days.length > 0 && current.hours) {
+      const range =
+        current.days.length > 2 &&
+        current.days[0] === "Lun" &&
+        current.days[current.days.length - 1] === "Sáb"
           ? "Lun–Sáb"
-          : currentGroup.days.length > 1
-          ? `${currentGroup.days[0]}–${currentGroup.days[currentGroup.days.length - 1]}`
-          : currentGroup.days.join(", ")
-
-      groupedSchedules.push({
-        days: daysRange,
-        hours: currentGroup.hours,
-      })
+          : current.days.length > 1
+          ? `${current.days[0]}–${current.days[current.days.length - 1]}`
+          : current.days.join(", ")
+      grouped.push({ days: range, hours: current.hours })
     }
 
-    if (groupedSchedules.length === 0) {
-      return "Horarios no especificados"
-    }
-
-    return groupedSchedules.map((g) => `${g.days}: ${g.hours}`).join(" | ")
+    if (grouped.length === 0) return "Horarios no especificados"
+    return grouped.map(g => `${g.days}: ${g.hours}`).join(" | ")
   }
 
   if (loading) {
     return (
-      // responsive: centra el loader y usa altura mínima del viewport
       <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
@@ -261,9 +283,7 @@ export default function AdminUbicacionesPage() {
     <div className="min-h-screen w-full bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        {/* responsive: contenedor central con paddings por breakpoint */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* responsive: toolbar que se adapta y hace wrap */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" asChild>
@@ -278,17 +298,14 @@ export default function AdminUbicacionesPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4 mr-2" />
                   Agregar Ubicación
                 </Button>
               </DialogTrigger>
-              {/* responsive: ancho máximo del diálogo en sm */}
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>{editingItem ? "Editar Ubicación" : "Agregar Nueva Ubicación"}</DialogTitle>
                 </DialogHeader>
 
-                {/* responsive: grid 1 col en móvil, 2 cols en md para algunos grupos */}
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre de la Sucursal</Label>
@@ -332,71 +349,27 @@ export default function AdminUbicacionesPage() {
                     </div>
                   </div>
 
-                  {/* Horarios: grid 2 cols en móvil, 3 en md, 4 en lg */}
+                  {/* Horarios */}
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_monday">Lunes</Label>
-                      <Input
-                        id="hours_monday"
-                        value={formData.hours_monday}
-                        onChange={(e) => setFormData({ ...formData, hours_monday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_tuesday">Martes</Label>
-                      <Input
-                        id="hours_tuesday"
-                        value={formData.hours_tuesday}
-                        onChange={(e) => setFormData({ ...formData, hours_tuesday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_wednesday">Miércoles</Label>
-                      <Input
-                        id="hours_wednesday"
-                        value={formData.hours_wednesday}
-                        onChange={(e) => setFormData({ ...formData, hours_wednesday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_thursday">Jueves</Label>
-                      <Input
-                        id="hours_thursday"
-                        value={formData.hours_thursday}
-                        onChange={(e) => setFormData({ ...formData, hours_thursday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_friday">Viernes</Label>
-                      <Input
-                        id="hours_friday"
-                        value={formData.hours_friday}
-                        onChange={(e) => setFormData({ ...formData, hours_friday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="hours_saturday">Sábado</Label>
-                      <Input
-                        id="hours_saturday"
-                        value={formData.hours_saturday}
-                        onChange={(e) => setFormData({ ...formData, hours_saturday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2 lg:col-span-2">
-                      <Label htmlFor="hours_sunday">Domingo</Label>
-                      <Input
-                        id="hours_sunday"
-                        value={formData.hours_sunday}
-                        onChange={(e) => setFormData({ ...formData, hours_sunday: e.target.value })}
-                        placeholder="09:00 - 21:00"
-                      />
-                    </div>
+                    {[
+                      ["hours_monday", "Lunes"],
+                      ["hours_tuesday", "Martes"],
+                      ["hours_wednesday", "Miércoles"],
+                      ["hours_thursday", "Jueves"],
+                      ["hours_friday", "Viernes"],
+                      ["hours_saturday", "Sábado"],
+                      ["hours_sunday", "Domingo"],
+                    ].map(([key, label]) => (
+                      <div className="space-y-2" key={key}>
+                        <Label htmlFor={key}>{label}</Label>
+                        <Input
+                          id={key}
+                          value={(formData as any)[key]}
+                          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                          placeholder="09:00 - 21:00"
+                        />
+                      </div>
+                    ))}
                   </div>
 
                   <div className="space-y-2">
@@ -426,14 +399,12 @@ export default function AdminUbicacionesPage() {
       </div>
 
       {/* Lista */}
-      {/* responsive: contenedor central con paddings por breakpoint */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardHeader>
             <CardTitle>Lista de Ubicaciones</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* responsive: scroll horizontal en móvil */}
             <div className="w-full overflow-x-auto rounded-lg border">
               <Table>
                 <TableHeader>
@@ -477,7 +448,6 @@ export default function AdminUbicacionesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {/* responsive: acciones con wrap */}
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => handleEdit(ubicacion)}>
                             <Edit className="h-4 w-4" />
@@ -497,6 +467,13 @@ export default function AdminUbicacionesPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {ubicaciones.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-8">
+                        No hay ubicaciones registradas todavía.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

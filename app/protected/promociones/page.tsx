@@ -84,7 +84,7 @@ export default function AdminPromocionesPage() {
         title: formData.title,
         description: formData.description,
         discount_percentage: Number.parseFloat(formData.discount_percentage),
-        promo_category: formData.promo_category,
+        promo_type: formData.promo_category,
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
         terms_conditions: formData.terms_conditions || undefined,
